@@ -131,7 +131,6 @@ const dom = {
 
   // GitHub Deliverables Viewer
   deliverablesSection: document.getElementById('repo-deliverables'),
-  openDeliverablesLink: document.getElementById('open-deliverables-link'),
   closeDeliverablesBtn: document.getElementById('close-deliverables-btn'),
   deliverableTabs: document.querySelectorAll('.tab-btn'),
   activeCodeFilename: document.getElementById('active-code-filename'),
@@ -1097,10 +1096,11 @@ function bindEvents() {
   });
 
   // Deliverables Code Viewer
-  dom.openDeliverablesLink.addEventListener('click', openDeliverablesViewer);
-  dom.closeDeliverablesBtn.addEventListener('click', () => {
-    dom.deliverablesSection.classList.add('hidden');
-  });
+  if (dom.closeDeliverablesBtn) {
+    dom.closeDeliverablesBtn.addEventListener('click', () => {
+      dom.deliverablesSection.classList.add('hidden');
+    });
+  }
 
   dom.deliverableTabs.forEach((tab) => {
     tab.addEventListener('click', () => {
