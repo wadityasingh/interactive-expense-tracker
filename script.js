@@ -118,12 +118,8 @@ const dom = {
   emptyStateDesc: document.getElementById('empty-state-desc'),
   emptyLoadSampleBtn: document.getElementById('empty-load-sample-btn'),
   emptyResetFilterBtn: document.getElementById('empty-reset-filter-btn'),
-  footerShownCount: document.getElementById('footer-shown-count'),
-  footerTotalCount: document.getElementById('footer-total-count'),
-  footerSubtotal: document.getElementById('footer-subtotal'),
 
   // Bulk & Utility Actions
-  headerSampleBtn: document.getElementById('header-sample-btn'),
   exportCsvBtn: document.getElementById('export-csv-btn'),
   clearAllDataBtn: document.getElementById('clear-all-data-btn'),
   confirmClearBanner: document.getElementById('confirm-clear-banner'),
@@ -136,7 +132,6 @@ const dom = {
   // GitHub Deliverables Viewer
   deliverablesSection: document.getElementById('repo-deliverables'),
   openDeliverablesLink: document.getElementById('open-deliverables-link'),
-  viewCodeBtn: document.getElementById('view-code-btn'),
   closeDeliverablesBtn: document.getElementById('close-deliverables-btn'),
   deliverableTabs: document.querySelectorAll('.tab-btn'),
   activeCodeFilename: document.getElementById('active-code-filename'),
@@ -723,9 +718,7 @@ function renderSummaryDashboard(metrics) {
     dom.topCategoryAmount.textContent = formatINR(0);
   }
 
-  // Requirement: Show "Load Sample Data" button ONLY when the expense list is empty
   const isEmpty = expenses.length === 0;
-  dom.headerSampleBtn.classList.toggle('hidden', !isEmpty);
   dom.clearAllDataBtn.classList.toggle('hidden', isEmpty);
   dom.exportCsvBtn.disabled = isEmpty;
 }
@@ -785,12 +778,6 @@ function renderCategoryBreakdown(metrics) {
  */
 function renderExpenseTable() {
   const visibleExpenses = getFilteredAndSortedExpenses();
-  const visibleTotal = visibleExpenses.reduce((sum, item) => sum + item.amount, 0);
-
-  // Update footer & status text
-  dom.footerShownCount.textContent = String(visibleExpenses.length);
-  dom.footerTotalCount.textContent = String(expenses.length);
-  dom.footerSubtotal.textContent = formatINR(visibleTotal);
 
   const sortLabels = {
     'date-desc': 'newest date first',
@@ -1083,8 +1070,7 @@ function bindEvents() {
   dom.clearFiltersBtn.addEventListener('click', resetAllFilters);
   dom.emptyResetFilterBtn.addEventListener('click', resetAllFilters);
 
-  // Sample Data Buttons (visible only when empty)
-  dom.headerSampleBtn.addEventListener('click', loadSampleData);
+  // Sample Data Button (visible only when empty)
   dom.emptyLoadSampleBtn.addEventListener('click', loadSampleData);
 
   // CSV Export
@@ -1112,7 +1098,6 @@ function bindEvents() {
 
   // Deliverables Code Viewer
   dom.openDeliverablesLink.addEventListener('click', openDeliverablesViewer);
-  dom.viewCodeBtn.addEventListener('click', openDeliverablesViewer);
   dom.closeDeliverablesBtn.addEventListener('click', () => {
     dom.deliverablesSection.classList.add('hidden');
   });
