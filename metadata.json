@@ -1,0 +1,6 @@
+{
+  "name": "Interactive Expense Tracker",
+  "description": "A clean, production-ready browser-based expense tracker built with pure HTML5, CSS3, and Vanilla JavaScript featuring CRUD operations, filtering, sorting, live calculations, and LocalStorage persistence.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

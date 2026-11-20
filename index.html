@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interactive Expense Tracker</title>
+  <meta name="description" content="A clean, production-ready browser-based expense tracker built with pure HTML5, CSS3, and Vanilla JavaScript featuring CRUD operations, filtering, sorting, live calculations, and LocalStorage persistence." />
+  <meta property="og:title" content="Interactive Expense Tracker" />
+  <meta property="og:description" content="A clean, production-ready browser-based expense tracker built with pure HTML5, CSS3, and Vanilla JavaScript featuring CRUD operations, filtering, sorting, live calculations, and LocalStorage persistence." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <!-- Top Navigation Header (3-Zone Contract) -->
+  <header class="app-header">
+    <div class="header-inner">
+      <a href="#dashboard" class="brand-wordmark">LedgerFlow</a>
+      <nav class="header-nav" aria-label="Main navigation">
+        <a href="#dashboard" class="nav-link">Overview</a>
+        <a href="#entry-section" class="nav-link">Add Expense</a>
+        <a href="#breakdown-section" class="nav-link">Breakdown</a>
+        <a href="#transactions-section" class="nav-link">Transactions</a>
+        <a href="#repo-deliverables" class="nav-link" id="open-deliverables-link">Code &amp; README</a>
+      </nav>
+      <div class="header-actions">
+        <button type="button" id="export-csv-btn" class="btn btn-primary btn-sm">Export CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace Container -->
+  <main class="main-container">
+    <!-- Hero / Workspace Introduction & Quick Actions -->
+    <section class="workspace-intro" id="dashboard">
+      <div class="intro-content">
+        <h1 class="page-title">Expense Overview &amp; Cashflow Ledger</h1>
+        <p class="page-subtitle">Track daily expenditures, analyze category distribution, and manage personal transactions in INR (₹) with real-time browser persistence.</p>
+      </div>
+      <div class="intro-toolbar">
+        <button type="button" id="header-sample-btn" class="btn btn-secondary">Load Sample Data</button>
+        <button type="button" id="view-code-btn" class="btn btn-outline">View GitHub Deliverables</button>
+      </div>
+    </section>
+
+    <!-- 3-Card Spending Summary Dashboard -->
+    <section class="summary-grid" aria-label="Spending Summary">
+      <!-- Card 1: Total Expenses -->
+      <article class="summary-card">
+        <div class="summary-card-header">
+          <span class="summary-label">Total Expenses</span>
+          <span class="summary-meta" id="total-count-label">0 transactions</span>
+        </div>
+        <div class="summary-value tabular-nums" id="total-expenses-amount">₹0.00</div>
+        <div class="summary-footer">
+          <span>Filtered View: <strong class="tabular-nums" id="filtered-total-amount">₹0.00</strong></span>
+          <span aria-hidden="true">·</span>
+          <span id="filtered-count-label">0 shown</span>
+        </div>
+      </article>
+
+      <!-- Card 2: This Month's Spending -->
+      <article class="summary-card">
+        <div class="summary-card-header">
+          <span class="summary-label">This Month's Spending</span>
+          <span class="summary-meta" id="current-month-name">Current Month</span>
+        </div>
+        <div class="summary-value tabular-nums" id="month-expenses-amount">₹0.00</div>
+        <div class="summary-footer">
+          <span id="month-transaction-count">0 transactions this month</span>
+          <span aria-hidden="true">·</span>
+          <span>Avg <strong class="tabular-nums" id="avg-expense-amount">₹0</strong> / entry</span>
+        </div>
+      </article>
+
+      <!-- Card 3: Top Category -->
+      <article class="summary-card">
+        <div class="summary-card-header">
+          <span class="summary-label">Top Spending Category</span>
+          <span class="summary-meta" id="top-category-share">0% of total</span>
+        </div>
+        <div class="summary-value summary-value-text" id="top-category-name">No data yet</div>
+        <div class="summary-footer">
+          <span>Category Spend: <strong class="tabular-nums" id="top-category-amount">₹0.00</strong></span>
+        </div>
+      </article>
+    </section>
+
+    <!-- Two-Column Workspace: Add/Edit Form + Category Breakdown -->
+    <div class="workspace-split">
+      <!-- Left Column: Add / Edit Expense Form -->
+      <section class="card-surface form-section" id="entry-section" aria-labelledby="form-heading">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title" id="form-heading">Record New Expense</h2>
+            <p class="section-desc" id="form-subheading">Enter transaction details below. All fields are validated before saving.</p>
+          </div>
+          <span class="edit-mode-indicator hidden" id="edit-mode-indicator">Editing Record</span>
+        </div>
+
+        <form id="expense-form" novalidate>
+          <input type="hidden" id="expense-id" value="" />
+
+          <div class="form-group">
+            <label for="expense-title" class="form-label">Expense Title / Description <span class="required-mark">*</span></label>
+            <input
+              type="text"
+              id="expense-title"
+              name="title"
+              class="form-input"
+              placeholder="e.g., Monthly Broadband Bill, Grocery Run"
+              maxlength="80"
+              autocomplete="off"
+              required
+            />
+            <p class="field-error hidden" id="error-title" role="alert"></p>
+          </div>
+
+          <div class="form-row-2col">
+            <div class="form-group">
+              <label for="expense-amount" class="form-label">Amount (₹ INR) <span class="required-mark">*</span></label>
+              <div class="input-with-prefix">
+                <span class="input-prefix" aria-hidden="true">₹</span>
+                <input
+                  type="number"
+                  id="expense-amount"
+                  name="amount"
+                  class="form-input input-prefixed tabular-nums"
+                  placeholder="0.00"
+                  step="0.01"
+                  min="0.01"
+                  required
+                />
+              </div>
+              <p class="field-error hidden" id="error-amount" role="alert"></p>
+            </div>
+
+            <div class="form-group">
+              <label for="expense-category" class="form-label">Category <span class="required-mark">*</span></label>
+              <select id="expense-category" name="category" class="form-select" required>
+                <option value="">Select a category</option>
+                <option value="Food & Dining">Food &amp; Dining</option>
+                <option value="Transport">Transport</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Bills & Utilities">Bills &amp; Utilities</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Health">Health</option>
+                <option value="Other">Other</option>
+              </select>
+              <p class="field-error hidden" id="error-category" role="alert"></p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="expense-date" class="form-label">Transaction Date <span class="required-mark">*</span></label>
+            <input
+              type="date"
+              id="expense-date"
+              name="date"
+              class="form-input tabular-nums"
+              required
+            />
+            <p class="field-error hidden" id="error-date" role="alert"></p>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" id="submit-btn" class="btn btn-primary">Add Expense</button>
+            <button type="button" id="cancel-edit-btn" class="btn btn-secondary hidden">Cancel Edit</button>
+            <button type="button" id="reset-form-btn" class="btn btn-ghost">Reset Fields</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Right Column: Category Breakdown Progress Bars -->
+      <section class="card-surface breakdown-section" id="breakdown-section" aria-labelledby="breakdown-heading">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title" id="breakdown-heading">Category Allocation</h2>
+            <p class="section-desc">Live distribution of spending across all 7 budget categories.</p>
+          </div>
+          <span class="summary-meta tabular-nums" id="breakdown-basis-label">Based on filtered view</span>
+        </div>
+
+        <div id="category-breakdown-list" class="breakdown-list">
+          <!-- Populated dynamically via script.js -->
+        </div>
+      </section>
+    </div>
+
+    <!-- Filter, Search & Sort Controls + Expense Listing Table -->
+    <section class="card-surface ledger-section" id="transactions-section" aria-labelledby="ledger-heading">
+      <div class="ledger-top-bar">
+        <div>
+          <h2 class="section-title" id="ledger-heading">Expense Transactions</h2>
+          <p class="section-desc" id="ledger-status-text">Showing all recorded expenses sorted by newest date first.</p>
+        </div>
+        <div class="ledger-top-actions">
+          <button type="button" id="clear-all-data-btn" class="btn btn-danger-ghost btn-sm">Clear All Records</button>
+        </div>
+      </div>
+
+      <!-- Filter & Sort Bar -->
+      <div class="filter-bar" role="region" aria-label="Filter and sort expenses">
+        <div class="filter-group filter-search">
+          <label for="search-input" class="filter-label">Search Description</label>
+          <input
+            type="search"
+            id="search-input"
+            class="form-input form-input-sm"
+            placeholder="Filter by title or keyword..."
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-category" class="filter-label">Category</label>
+          <select id="filter-category" class="form-select form-input-sm">
+            <option value="ALL">All Categories</option>
+            <option value="Food & Dining">Food &amp; Dining</option>
+            <option value="Transport">Transport</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Bills & Utilities">Bills &amp; Utilities</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Health">Health</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-month" class="filter-label">Month</label>
+          <input
+            type="month"
+            id="filter-month"
+            class="form-input form-input-sm tabular-nums"
+          />
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-date" class="filter-label">Exact Date</label>
+          <input
+            type="date"
+            id="filter-date"
+            class="form-input form-input-sm tabular-nums"
+          />
+        </div>
+
+        <div class="filter-group">
+          <label for="sort-by" class="filter-label">Sort By</label>
+          <select id="sort-by" class="form-select form-input-sm">
+            <option value="date-desc">Date (Newest First)</option>
+            <option value="date-asc">Date (Oldest First)</option>
+            <option value="amount-desc">Amount (Highest First)</option>
+            <option value="amount-asc">Amount (Lowest First)</option>
+          </select>
+        </div>
+
+        <div class="filter-group filter-actions">
+          <button type="button" id="clear-filters-btn" class="btn btn-secondary btn-sm">Clear Filters</button>
+        </div>
+      </div>
+
+      <!-- Inline Confirmation Banner for Clear All (No window.confirm) -->
+      <div id="confirm-clear-banner" class="confirm-banner hidden" role="alert">
+        <div class="confirm-banner-text">
+          <strong>Confirm deletion:</strong> Are you sure you want to permanently remove all saved expenses from LocalStorage?
+        </div>
+        <div class="confirm-banner-actions">
+          <button type="button" id="confirm-clear-yes" class="btn btn-danger btn-sm">Yes, Delete All</button>
+          <button type="button" id="confirm-clear-no" class="btn btn-secondary btn-sm">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Expense Table Desktop & Responsive Cards -->
+      <div class="table-responsive" id="table-container">
+        <table class="expense-table" aria-label="Recorded expenses">
+          <thead>
+            <tr>
+              <th scope="col">Title &amp; Category</th>
+              <th scope="col">Date</th>
+              <th scope="col" class="text-right">Amount (₹)</th>
+              <th scope="col" class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="expense-tbody">
+            <!-- Dynamically populated by script.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State (Shown when 0 total expenses or 0 filtered matches) -->
+      <div id="empty-state" class="empty-state hidden">
+        <h3 class="empty-state-title" id="empty-state-title">No expenses recorded yet</h3>
+        <p class="empty-state-desc" id="empty-state-desc">
+          Start tracking your personal finances by adding your first expense above, or populate realistic Indian Rupee (₹) sample transactions to test filtering and sorting.
+        </p>
+        <div class="empty-state-actions">
+          <button type="button" id="empty-load-sample-btn" class="btn btn-primary">Load Sample Data</button>
+          <button type="button" id="empty-reset-filter-btn" class="btn btn-secondary hidden">Reset Active Filters</button>
+        </div>
+      </div>
+
+      <!-- Ledger Summary Footer Bar -->
+      <div class="ledger-footer" id="ledger-footer">
+        <div class="ledger-footer-left">
+          <span>Showing <strong class="tabular-nums" id="footer-shown-count">0</strong> of <strong class="tabular-nums" id="footer-total-count">0</strong> total records</span>
+          <span aria-hidden="true">·</span>
+          <span>LocalStorage Synced</span>
+        </div>
+        <div class="ledger-footer-right">
+          <span>Filtered Subtotal: <strong class="tabular-nums" id="footer-subtotal">₹0.00</strong></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- GitHub Repository Deliverables Viewer (index.html, style.css, script.js, README.md) -->
+    <section class="card-surface deliverables-section hidden" id="repo-deliverables" aria-labelledby="deliverables-heading">
+      <div class="section-header">
+        <div>
+          <p class="section-kicker">GitHub Pages Ready · Pure Vanilla Stack</p>
+          <h2 class="section-title" id="deliverables-heading">Project Source Files &amp; README Documentation</h2>
+          <p class="section-desc">Copy or download the 4 standalone files required for your GitHub repository submission.</p>
+        </div>
+        <button type="button" id="close-deliverables-btn" class="btn btn-secondary btn-sm">Close Viewer</button>
+      </div>
+
+      <div class="deliverables-tabs" role="tablist">
+        <button type="button" class="tab-btn active" data-file="README.md" role="tab" aria-selected="true">README.md</button>
+        <button type="button" class="tab-btn" data-file="index.html" role="tab" aria-selected="false">index.html</button>
+        <button type="button" class="tab-btn" data-file="style.css" role="tab" aria-selected="false">style.css</button>
+        <button type="button" class="tab-btn" data-file="script.js" role="tab" aria-selected="false">script.js</button>
+      </div>
+
+      <div class="code-viewer-toolbar">
+        <span class="code-filename" id="active-code-filename">README.md</span>
+        <div class="code-toolbar-actions">
+          <button type="button" id="copy-code-btn" class="btn btn-secondary btn-sm">Copy File Contents</button>
+          <button type="button" id="download-code-btn" class="btn btn-primary btn-sm">Download File</button>
+        </div>
+      </div>
+      <pre class="code-display"><code id="code-content-area">Loading file contents...</code></pre>
+    </section>
+  </main>
+
+  <!-- Toast Notification Feedback -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Minimal Footer -->
+  <footer class="app-footer">
+    <div class="footer-inner">
+      <span>LedgerFlow — Interactive Expense Tracker</span>
+    </div>
+  </footer>
+
+  <!-- Pure Vanilla ES6 JavaScript -->
+  <script type="module" src="./script.js"></script>
+</body>
+</html>
